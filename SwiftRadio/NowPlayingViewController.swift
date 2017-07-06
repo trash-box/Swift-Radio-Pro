@@ -97,8 +97,11 @@ class NowPlayingViewController: UIViewController {
             }
         }
         
+        
         // Setup slider
         setupVolumeSlider()
+    
+        listenVolumeButton()
     }
     
     func didBecomeActiveNotificationReceived() {
@@ -582,6 +585,34 @@ class NowPlayingViewController: UIViewController {
         if kDebugLog {
             print("playerItemDidReachEnd")
         }
+    }
+    
+    func listenVolumeButton(){
+        let audioSession = AVAudioSession.sharedInstance()
+        do{
+            try audioSession.setActive(true)
+            let vol = audioSession.outputVolume
+            print(vol.description) //gets initial volume
+        }
+        catch{
+            print("Error info: \(error)")
+        }
+        audioSession.addObserver(self, forKeyPath: "outputVolume", options:
+            NSKeyValueObservingOptions.new, context: nil)
+    }
+    
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "outputVolume"{
+            let volume = (change?[NSKeyValueChangeKey.newKey] as!
+                NSNumber).floatValue
+            print("volume " + volume.description)
+            slider?.value = volume
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        let audioSession = AVAudioSession.sharedInstance()
+        audioSession.removeObserver(self, forKeyPath: "outputVolume")
     }
 }
 
